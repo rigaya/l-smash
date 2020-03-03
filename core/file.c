@@ -525,8 +525,8 @@ int lsmash_open_file
     param->minor_version       = 0;
     param->max_chunk_duration  = 0.5;
     param->max_async_tolerance = 2.0;
-    param->max_chunk_size      = 4 * 1024 * 1024;
-    param->max_read_size       = 4 * 1024 * 1024;
+    param->max_chunk_size      = BS_MAX_DEFAULT_READ_SIZE;
+    param->max_read_size       = BS_MAX_DEFAULT_READ_SIZE;
     return 0;
 }
 

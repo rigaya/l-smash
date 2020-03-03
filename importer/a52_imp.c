@@ -244,6 +244,7 @@ static int ac3_importer_probe( importer_t *importer )
         return LSMASH_ERR_MEMORY_ALLOC;
     lsmash_bits_t *bits = ac3_imp->info.bits;
     lsmash_bs_t   *bs   = bits->bs;
+		size_t prev_max_size = bs->buffer.max_size;
     bs->buffer.max_size = AC3_MAX_SYNCFRAME_LENGTH;
     /* Check the syncword and parse the syncframe header */
     int err;
@@ -273,7 +274,8 @@ static int ac3_importer_probe( importer_t *importer )
     importer->status = IMPORTER_OK;
     return 0;
 fail:
-    remove_ac3_importer( ac3_imp );
+		bs->buffer.max_size = prev_max_size;
+		remove_ac3_importer( ac3_imp );
     return err;
 }
 
@@ -607,6 +609,7 @@ static int eac3_importer_probe( importer_t *importer )
         return LSMASH_ERR_MEMORY_ALLOC;
     lsmash_bits_t *bits = eac3_imp->info.bits;
     lsmash_bs_t   *bs   = bits->bs;
+		size_t prev_max_size = bs->buffer.max_size;
     bs->buffer.max_size = EAC3_MAX_SYNCFRAME_LENGTH;
     importer->info = eac3_imp;
     int err = eac3_importer_get_next_accessunit_internal( importer );
@@ -629,7 +632,8 @@ static int eac3_importer_probe( importer_t *importer )
     }
     return 0;
 fail:
-    remove_eac3_importer( eac3_imp );
+		bs->buffer.max_size = prev_max_size;
+		remove_eac3_importer( eac3_imp );
     importer->info      = NULL;
     return err;
 }

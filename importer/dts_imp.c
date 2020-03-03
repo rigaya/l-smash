@@ -315,6 +315,7 @@ static int dts_importer_probe( importer_t *importer )
         return LSMASH_ERR_MEMORY_ALLOC;
     lsmash_bits_t *bits = dts_imp->info.bits;
     lsmash_bs_t   *bs   = bits->bs;
+		size_t prev_max_size = bs->buffer.max_size;
     bs->buffer.max_size = DTS_MAX_EXSS_SIZE;
     importer->info = dts_imp;
     int err = dts_importer_get_next_accessunit_internal( importer );
@@ -337,6 +338,7 @@ static int dts_importer_probe( importer_t *importer )
     }
     return 0;
 fail:
+		bs->buffer.max_size = prev_max_size;
     remove_dts_importer( dts_imp );
     importer->info = NULL;
     return err;

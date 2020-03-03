@@ -21,7 +21,7 @@
 /* This file is available under an ISC license. */
 
 /*---- bytestream ----*/
-#define BS_MAX_DEFAULT_READ_SIZE (4 * 1024 * 1024)
+#define BS_MAX_DEFAULT_READ_SIZE (32 * 1024 * 1024)
 
 typedef struct
 {
@@ -32,7 +32,8 @@ typedef struct
     size_t   store;         /* valid data size on the buffer */
     size_t   alloc;         /* total buffer size including invalid area */
     size_t   pos;           /* the data position on the buffer to be read next */
-    size_t   max_size;      /* the maximum number of bytes for reading from the stream at one time */
+		size_t   max_size;      /* the maximum number of bytes for reading from the stream at one time */
+		size_t   next_read_size;/* next read size */
     uint64_t count;         /* counter for arbitrary usage */
 } lsmash_buffer_t;
 
@@ -148,6 +149,7 @@ uint32_t lsmash_bs_get_le32( lsmash_bs_t *bs );
 int lsmash_bs_read( lsmash_bs_t *bs, uint32_t size );
 int lsmash_bs_read_data( lsmash_bs_t *bs, uint8_t *buf, size_t *size );
 int lsmash_bs_import_data( lsmash_bs_t *bs, void *data, uint32_t length );
+int64_t lsmash_bs_find_string(lsmash_bs_t *bs, uint32_t offset, const void *needle, uint32_t needlelen);
 
 /* Check if the given offset reaches both EOF of the stream and the end of the buffer. */
 static inline int lsmash_bs_is_end( lsmash_bs_t *bs, uint32_t offset )

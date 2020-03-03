@@ -1743,6 +1743,7 @@ static int64_t fake_file_seek
 /* Public functions */
 lsmash_root_t *lsmash_create_root( void )
 {
+	lsmash_init_sse();
     lsmash_root_t *root = ALLOCATE_BOX( root_abstract );
     if( LSMASH_IS_NON_EXISTING_BOX( root ) )
         return NULL;

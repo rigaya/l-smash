@@ -33,6 +33,7 @@ lsmash_bs_t *lsmash_bs_create( void )
     bs->unseekable      = 1;
     bs->buffer.internal = 1;
     bs->buffer.max_size = BS_MAX_DEFAULT_READ_SIZE;
+		bs->buffer.next_read_size = 1;
     return bs;
 }
 
@@ -72,6 +73,7 @@ int lsmash_bs_set_empty_stream( lsmash_bs_t *bs, uint8_t *data, size_t size )
     bs->buffer.alloc      = size;
     bs->buffer.pos        = 0;
     bs->buffer.max_size   = 0;  /* make no sense */
+    bs->buffer.next_read_size = 1;  /* make no sense */
     bs->buffer.count      = 0;
     bs->read  = NULL;
     bs->write = NULL;
@@ -83,8 +85,6 @@ void lsmash_bs_empty( lsmash_bs_t *bs )
 {
     if( !bs )
         return;
-    if( bs->buffer.data )
-        memset( bs->buffer.data, 0, bs->buffer.alloc );
     bs->buffer.store = 0;
     bs->buffer.pos   = 0;
 }
@@ -197,6 +197,7 @@ int64_t lsmash_bs_read_seek( lsmash_bs_t *bs, int64_t offset, int whence )
     bs->written = LSMASH_MAX( bs->written, bs->offset );
     bs->eof     = 0;
     bs->eob     = 0;
+		bs->buffer.next_read_size = 1; /* reset next read szie */
     /* The data on the buffer is invalid. */
     lsmash_bs_empty( bs );
     return ret;
@@ -353,7 +354,7 @@ void *lsmash_bs_export_data( lsmash_bs_t *bs, uint32_t *length )
 /*---- ----*/
 
 /*---- bitstream reader ----*/
-static void bs_fill_buffer( lsmash_bs_t *bs )
+static void bs_fill_buffer( lsmash_bs_t *bs, int requested_size )
 {
     if( bs->eof || bs->error )
         return;
@@ -370,26 +371,24 @@ static void bs_fill_buffer( lsmash_bs_t *bs )
     }
     /* Read bytes from the stream to fill the buffer. */
     lsmash_bs_dispose_past_data( bs );
-    while( bs->buffer.alloc > bs->buffer.store )
+		uint64_t next_read_size = LSMASH_MAX(requested_size, bs->buffer.next_read_size);
+		next_read_size = LSMASH_MIN(next_read_size, bs->buffer.alloc - bs->buffer.store);
+    int read_size = bs->read( bs->stream, lsmash_bs_get_buffer_data_end( bs ), next_read_size);
+    if( read_size == 0 )
     {
-        uint64_t invalid_buffer_size = bs->buffer.alloc - bs->buffer.store;
-        int max_read_size = LSMASH_MIN( invalid_buffer_size, bs->buffer.max_size );
-        int read_size = bs->read( bs->stream, lsmash_bs_get_buffer_data_end( bs ), max_read_size );
-        if( read_size == 0 )
-        {
-            bs->eof = 1;
-            return;
-        }
-        else if( read_size < 0 )
-        {
-            bs->error = 1;
-            return;
-        }
-        bs->buffer.unseekable = 0;
-        bs->buffer.store += read_size;
-        bs->offset       += read_size;
-        bs->written = LSMASH_MAX( bs->written, bs->offset );
+        bs->eof = 1;
+        return;
     }
+    else if( read_size < 0 )
+    {
+        bs->error = 1;
+        return;
+    }
+    bs->buffer.unseekable = 0;
+    bs->buffer.store += read_size;
+		bs->buffer.next_read_size = LSMASH_MIN(bs->buffer.next_read_size * 2, bs->buffer.max_size);
+    bs->offset       += read_size;
+    bs->written = LSMASH_MAX( bs->written, bs->offset );
 }
 
 uint8_t lsmash_bs_show_byte( lsmash_bs_t *bs, uint32_t offset )
@@ -398,7 +397,7 @@ uint8_t lsmash_bs_show_byte( lsmash_bs_t *bs, uint32_t offset )
         return 0;
     if( offset >= lsmash_bs_get_remaining_buffer_size( bs ) )
     {
-        bs_fill_buffer( bs );
+        bs_fill_buffer( bs, 1 );
         if( bs->error )
             return 0;
         if( offset >= lsmash_bs_get_remaining_buffer_size( bs ) )
@@ -408,7 +407,7 @@ uint8_t lsmash_bs_show_byte( lsmash_bs_t *bs, uint32_t offset )
                 return 0;
             /* We need increase the buffer size. */
             bs_alloc( bs, bs->buffer.pos + offset + 1 );
-            bs_fill_buffer( bs );
+            bs_fill_buffer( bs, 1);
             if( bs->error )
                 return 0;
         }
@@ -456,7 +455,7 @@ uint8_t lsmash_bs_get_byte( lsmash_bs_t *bs )
     assert( bs->buffer.pos <= bs->buffer.store );
     if( bs->buffer.pos == bs->buffer.store )
     {
-        bs_fill_buffer( bs );
+        bs_fill_buffer( bs, 1);
         if( bs->error )
             return 0;
         if( bs->buffer.pos == bs->buffer.store && bs->eof )
@@ -490,7 +489,7 @@ void lsmash_bs_skip_bytes( lsmash_bs_t *bs, uint32_t size )
         }
         else
         {
-            bs_fill_buffer( bs );
+            bs_fill_buffer( bs, size);
             if( bs->error )
                 break;
         }
@@ -533,7 +532,7 @@ static int64_t bs_get_bytes( lsmash_bs_t *bs, uint32_t size, uint8_t *buf )
         }
         else
         {
-            bs_fill_buffer( bs );
+            bs_fill_buffer( bs, remain_size);
             if( bs->error )
             {
                 bs->buffer.count += offset;
@@ -704,4 +703,43 @@ int lsmash_bs_import_data( lsmash_bs_t *bs, void *data, uint32_t length )
     memcpy( lsmash_bs_get_buffer_data_end( bs ), data, length );
     bs->buffer.store += length;
     return 0;
+}
+
+static int64_t lsmash_bs_find_string_internal(lsmash_bs_t *bs, uint32_t *offset,
+	const void *needle, uint32_t needlelen)
+{
+	const uint8_t* found;
+	uint64_t remain = lsmash_bs_get_remaining_buffer_size(bs);
+	if (*offset + needlelen <= remain) {
+		found = lsmash_memmem(bs->buffer.data + bs->buffer.pos + *offset,
+			remain - *offset, needle, needlelen);
+		if (found) {
+			return found - bs->buffer.data - bs->buffer.pos;
+		}
+		*offset = remain - needlelen + 1;
+	}
+	return -1;
+}
+
+int64_t lsmash_bs_find_string(lsmash_bs_t *bs, uint32_t offset, const void *needle, uint32_t needlelen)
+{
+	int64_t found;
+	if (bs->error)
+		return -1;
+	found = lsmash_bs_find_string_internal(bs, &offset, needle, needlelen);
+	if (found >= 0)
+		return found;
+	while (1) {
+		bs_fill_buffer(bs, BS_MAX_DEFAULT_READ_SIZE);
+		if (bs->error)
+			return -1;
+		found = lsmash_bs_find_string_internal(bs, &offset, needle, needlelen);
+		if (found >= 0)
+			return found;
+		if (bs->eof)
+			/* No more read from both the stream and the buffer. */
+			return -1;
+		/* We need increase the buffer size. */
+		bs_alloc(bs, bs->buffer.pos + offset + BS_MAX_DEFAULT_READ_SIZE);
+	}
 }

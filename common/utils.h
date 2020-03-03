@@ -61,6 +61,11 @@
 #define GET_FUNC_BY_NUM_ARGS_EX1( func_name, ... ) GET_FUNC_BY_NUM_ARGS_EX0( func_name, COUNT_NUM_ARGS( __VA_ARGS__ ) )
 #define CALL_FUNC_DEFAULT_ARGS( func_name, ... )   GET_FUNC_BY_NUM_ARGS_EX1( func_name, __VA_ARGS__ ) ( __VA_ARGS__ )
 
+extern const void * (*lsmash_memmem)(const void *haystack, size_t haystack_len, const void *needle,
+	size_t needle_len);
+
+void lsmash_init_sse();
+
 /*---- class ----*/
 typedef struct
 {

@@ -29,6 +29,66 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
+#include <nmmintrin.h>
+
+const void * (*lsmash_memmem)(const void *haystack, size_t haystack_len, const void *needle,
+	size_t needle_len) = 0;
+
+static const void * lsmash_memmem_naive(const void *haystack, size_t haystack_len, const void *needle,
+	size_t needle_len)
+{
+	const char *begin;
+	const char *const last_possible
+		= (const char *)haystack + haystack_len - needle_len;
+	if (needle_len == 0)
+		return (void *)haystack;
+	if (haystack_len < needle_len)
+		return NULL;
+	for (begin = (const char *)haystack; begin <= last_possible; ++begin)
+		if (begin[0] == ((const char *)needle)[0] &&
+			!memcmp((const void *)&begin[1],
+			(const void *)((const char *)needle + 1),
+				needle_len - 1))
+			return (void *)begin;
+
+	return NULL;
+}
+
+static const void *lsmash_memmem_sse42(const void *haystack, size_t haystack_len, const void *needle_,
+	size_t needle_len) {
+	if (needle_len > 16)
+		return lsmash_memmem_naive(haystack, haystack_len, needle_, needle_len);
+	if (haystack_len < needle_len)
+		return NULL;
+	enum { IMM8 = _SIDD_UBYTE_OPS | _SIDD_CMP_EQUAL_ORDERED | _SIDD_LEAST_SIGNIFICANT };
+	char tmp_buf[16]; memcpy(tmp_buf, needle_, needle_len);
+	const __m128i needle = _mm_loadu_si128((const __m128i*)tmp_buf);
+	int offset;
+	for (offset = 0; offset + 16 <= haystack_len; offset += 16 - needle_len + 1) {
+		const __m128i data = _mm_loadu_si128((const __m128i*)((const uint8_t*)haystack + offset));
+		auto r = _mm_cmpestri(needle, needle_len, data, 16, IMM8);
+		if (r + needle_len <= 16) {
+			return (const uint8_t*)haystack + offset + r;
+		}
+	}
+	auto remain = haystack_len - offset;
+	memcpy(tmp_buf, (const uint8_t*)haystack + offset, remain);
+	const __m128i data = _mm_loadu_si128((const __m128i*)tmp_buf);
+	auto r = _mm_cmpestri(needle, needle_len, data, remain, IMM8);
+	if (r + needle_len <= remain) {
+		return (const uint8_t*)haystack + offset + r;
+	}
+	return NULL;
+}
+
+void lsmash_init_sse() {
+	if (!lsmash_memmem) {
+		int cpuinfo[4];
+		__cpuid(cpuinfo, 1);
+		int sse42_available = (cpuinfo[2] & (1 << 20));
+		lsmash_memmem = sse42_available ? lsmash_memmem_sse42 : lsmash_memmem_naive;
+	}
+}
 
 /*---- type ----*/
 double lsmash_fixed2double( int64_t value, int frac_width )
