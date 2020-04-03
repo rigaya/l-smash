@@ -179,6 +179,9 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
+    <Manifest>
+      <AdditionalManifestFiles>cli.manifest</AdditionalManifestFiles>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -198,6 +201,9 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
+    <Manifest>
+      <AdditionalManifestFiles>cli.manifest</AdditionalManifestFiles>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='CLIDebug|Win32'">
     <ClCompile>
@@ -266,6 +272,9 @@
       <OptimizeReferences>true</OptimizeReferences>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
+    <Manifest>
+      <AdditionalManifestFiles>cli.manifest</AdditionalManifestFiles>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -296,6 +305,9 @@
       <OptimizeReferences>true</OptimizeReferences>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
+    <Manifest>
+      <AdditionalManifestFiles>cli.manifest</AdditionalManifestFiles>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='CLIRelease|Win32'">
     <ClCompile>

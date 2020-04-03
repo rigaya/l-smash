@@ -217,6 +217,9 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
+    <Manifest>
+      <AdditionalManifestFiles>cli.manifest</AdditionalManifestFiles>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='CLIDebug|x64'">
     <ClCompile>
@@ -236,6 +239,9 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
+    <Manifest>
+      <AdditionalManifestFiles>cli.manifest</AdditionalManifestFiles>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -322,6 +328,9 @@
       <OptimizeReferences>true</OptimizeReferences>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
+    <Manifest>
+      <AdditionalManifestFiles>cli.manifest</AdditionalManifestFiles>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='CLIRelease|x64'">
     <ClCompile>
@@ -352,6 +361,9 @@
       <OptimizeReferences>true</OptimizeReferences>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
+    <Manifest>
+      <AdditionalManifestFiles>cli.manifest</AdditionalManifestFiles>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="timelineeditor.c" />
