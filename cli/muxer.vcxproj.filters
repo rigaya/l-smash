@@ -15,4 +15,7 @@
       <Filter>Sources</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="muxer.rc" />
+  </ItemGroup>
 </Project>

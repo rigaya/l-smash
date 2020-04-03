@@ -316,6 +316,26 @@
       <Project>{df39d172-117d-4aac-9415-01e55dca6d9e}</Project>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="boxdumper.rc">
+      <NullTerminateStrings Condition="'$(Configuration)|$(Platform)'=='CLIRelease|Win32'">true</NullTerminateStrings>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='CLIRelease|Win32'">/c 65001</AdditionalOptions>
+      <NullTerminateStrings Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</NullTerminateStrings>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">/c 65001</AdditionalOptions>
+      <NullTerminateStrings Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</NullTerminateStrings>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">/c 65001</AdditionalOptions>
+      <NullTerminateStrings Condition="'$(Configuration)|$(Platform)'=='CLIDebug|Win32'">true</NullTerminateStrings>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='CLIDebug|Win32'">/c 65001</AdditionalOptions>
+      <NullTerminateStrings Condition="'$(Configuration)|$(Platform)'=='CLIRelease|x64'">true</NullTerminateStrings>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='CLIRelease|x64'">/c 65001</AdditionalOptions>
+      <NullTerminateStrings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</NullTerminateStrings>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/c 65001</AdditionalOptions>
+      <NullTerminateStrings Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</NullTerminateStrings>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">/c 65001</AdditionalOptions>
+      <NullTerminateStrings Condition="'$(Configuration)|$(Platform)'=='CLIDebug|x64'">true</NullTerminateStrings>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='CLIDebug|x64'">/c 65001</AdditionalOptions>
+    </ResourceCompile>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

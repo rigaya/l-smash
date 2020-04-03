@@ -159,6 +159,7 @@
       <Command>for /f usebackq %%a in (`git rev-list HEAD ^| find /c /v ""`) do set REV=%%a
 for /f usebackq %%a in (`git describe --always`) do set HASH=%%a
 type nul &gt; "$(SolutionDir)config.h"
+echo #define LSMASH_REV_NUM %REV% &gt;&gt; "$(SolutionDir)config.h"
 echo #define LSMASH_REV "%REV%" &gt;&gt; "$(SolutionDir)config.h"
 echo #define LSMASH_GIT_HASH "%HASH%" &gt;&gt; "$(SolutionDir)config.h"</Command>
     </PreBuildEvent>
@@ -182,6 +183,7 @@ echo #define LSMASH_GIT_HASH "%HASH%" &gt;&gt; "$(SolutionDir)config.h"</Command
       <Command>for /f usebackq %%a in (`git rev-list HEAD ^| find /c /v ""`) do set REV=%%a
 for /f usebackq %%a in (`git describe --always`) do set HASH=%%a
 type nul &gt; "$(SolutionDir)config.h"
+echo #define LSMASH_REV_NUM %REV% &gt;&gt; "$(SolutionDir)config.h"
 echo #define LSMASH_REV "%REV%" &gt;&gt; "$(SolutionDir)config.h"
 echo #define LSMASH_GIT_HASH "%HASH%" &gt;&gt; "$(SolutionDir)config.h"</Command>
     </PreBuildEvent>
@@ -205,6 +207,7 @@ echo #define LSMASH_GIT_HASH "%HASH%" &gt;&gt; "$(SolutionDir)config.h"</Command
       <Command>for /f usebackq %%a in (`git rev-list HEAD ^| find /c /v ""`) do set REV=%%a
 for /f usebackq %%a in (`git describe --always`) do set HASH=%%a
 type nul &gt; "$(SolutionDir)config.h"
+echo #define LSMASH_REV_NUM %REV% &gt;&gt; "$(SolutionDir)config.h"
 echo #define LSMASH_REV "%REV%" &gt;&gt; "$(SolutionDir)config.h"
 echo #define LSMASH_GIT_HASH "%HASH%" &gt;&gt; "$(SolutionDir)config.h"
 echo #define LSMASH_API_IMPORTS &gt;&gt; "$(SolutionDir)config.h"</Command>
@@ -229,6 +232,7 @@ echo #define LSMASH_API_IMPORTS &gt;&gt; "$(SolutionDir)config.h"</Command>
       <Command>for /f usebackq %%a in (`git rev-list HEAD ^| find /c /v ""`) do set REV=%%a
 for /f usebackq %%a in (`git describe --always`) do set HASH=%%a
 type nul &gt; "$(SolutionDir)config.h"
+echo #define LSMASH_REV_NUM %REV% &gt;&gt; "$(SolutionDir)config.h"
 echo #define LSMASH_REV "%REV%" &gt;&gt; "$(SolutionDir)config.h"
 echo #define LSMASH_GIT_HASH "%HASH%" &gt;&gt; "$(SolutionDir)config.h"
 echo #define LSMASH_API_IMPORTS &gt;&gt; "$(SolutionDir)config.h"</Command>
@@ -258,6 +262,7 @@ echo #define LSMASH_API_IMPORTS &gt;&gt; "$(SolutionDir)config.h"</Command>
       <Command>for /f usebackq %%a in (`git rev-list HEAD ^| find /c /v ""`) do set REV=%%a
 for /f usebackq %%a in (`git describe --always`) do set HASH=%%a
 type nul &gt; "$(SolutionDir)config.h"
+echo #define LSMASH_REV_NUM %REV% &gt;&gt; "$(SolutionDir)config.h"
 echo #define LSMASH_REV "%REV%" &gt;&gt; "$(SolutionDir)config.h"
 echo #define LSMASH_GIT_HASH "%HASH%" &gt;&gt; "$(SolutionDir)config.h"</Command>
     </PreBuildEvent>
@@ -286,6 +291,7 @@ echo #define LSMASH_GIT_HASH "%HASH%" &gt;&gt; "$(SolutionDir)config.h"</Command
       <Command>for /f usebackq %%a in (`git rev-list HEAD ^| find /c /v ""`) do set REV=%%a
 for /f usebackq %%a in (`git describe --always`) do set HASH=%%a
 type nul &gt; "$(SolutionDir)config.h"
+echo #define LSMASH_REV_NUM %REV% &gt;&gt; "$(SolutionDir)config.h"
 echo #define LSMASH_REV "%REV%" &gt;&gt; "$(SolutionDir)config.h"
 echo #define LSMASH_GIT_HASH "%HASH%" &gt;&gt; "$(SolutionDir)config.h"</Command>
     </PreBuildEvent>
@@ -314,6 +320,7 @@ echo #define LSMASH_GIT_HASH "%HASH%" &gt;&gt; "$(SolutionDir)config.h"</Command
       <Command>for /f usebackq %%a in (`git rev-list HEAD ^| find /c /v ""`) do set REV=%%a
 for /f usebackq %%a in (`git describe --always`) do set HASH=%%a
 type nul &gt; "$(SolutionDir)config.h"
+echo #define LSMASH_REV_NUM %REV% &gt;&gt; "$(SolutionDir)config.h"
 echo #define LSMASH_REV "%REV%" &gt;&gt; "$(SolutionDir)config.h"
 echo #define LSMASH_GIT_HASH "%HASH%" &gt;&gt; "$(SolutionDir)config.h"
 echo #define LSMASH_API_IMPORTS &gt;&gt; "$(SolutionDir)config.h"</Command>
@@ -343,6 +350,7 @@ echo #define LSMASH_API_IMPORTS &gt;&gt; "$(SolutionDir)config.h"</Command>
       <Command>for /f usebackq %%a in (`git rev-list HEAD ^| find /c /v ""`) do set REV=%%a
 for /f usebackq %%a in (`git describe --always`) do set HASH=%%a
 type nul &gt; "$(SolutionDir)config.h"
+echo #define LSMASH_REV_NUM %REV% &gt;&gt; "$(SolutionDir)config.h"
 echo #define LSMASH_REV "%REV%" &gt;&gt; "$(SolutionDir)config.h"
 echo #define LSMASH_GIT_HASH "%HASH%" &gt;&gt; "$(SolutionDir)config.h"
 echo #define LSMASH_API_IMPORTS &gt;&gt; "$(SolutionDir)config.h"</Command>
