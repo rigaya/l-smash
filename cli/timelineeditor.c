@@ -28,6 +28,7 @@
 #include <inttypes.h>
 #include <math.h>
 #include <stdarg.h>
+#include <time.h>
 
 #define LSMASH_MAX( a, b ) ((a) > (b) ? (a) : (b))
 
@@ -205,7 +206,7 @@ static int get_itunes_metadata( lsmash_root_t *root, uint32_t metadata_number, l
     lsmash_itunes_metadata_t shadow = *metadata;
     metadata->meaning = NULL;
     metadata->name    = NULL;
-    memset( &metadata->value, 0, sizeof(lsmash_itunes_metadata_value_t) );        
+    memset( &metadata->value, 0, sizeof(lsmash_itunes_metadata_value_t) );
     if( shadow.meaning )
     {
         metadata->meaning = duplicate_string( shadow.meaning );
@@ -870,7 +871,21 @@ static int check_white_brand( lsmash_brand_type brand )
 
 static int moov_to_front_callback( void *param, uint64_t written_movie_size, uint64_t total_movie_size )
 {
+    static uint32_t progress_pos = 0;
+    static struct timespec time_update = { 0, 0 };
+    if( (written_movie_size >> 22) <= progress_pos )
+        return 0;
+
+    /* Print, per 1sec */
+    struct timespec time_curr;
+    timespec_get(&time_curr, TIME_UTC);
+    if( (time_curr.tv_sec * 1000 + time_curr.tv_nsec / 1000000)
+        - (time_update.tv_sec * 1000 + time_update.tv_nsec / 1000000) <= 500 )
+        return 0;
+    REFRESH_CONSOLE;
     eprintf( "Finalizing: [%5.2lf%%]\r", ((double)written_movie_size / total_movie_size) * 100.0 );
+    progress_pos = written_movie_size >> 22;
+    time_update = time_curr;
     return 0;
 }
 
@@ -1130,6 +1145,8 @@ int main( int argc, char *argv[] )
     uint32_t num_active_input_tracks     = out_movie->num_tracks;
     uint64_t total_media_size            = 0;
     uint32_t progress_pos                = 0;
+    struct timespec time_update;
+    timespec_get(&time_update, TIME_UTC);
     while( 1 )
     {
         track_t *in_track = &in_movie->track[ in_movie->current_track_number - 1 ];
@@ -1178,11 +1195,30 @@ int main( int argc, char *argv[] )
                     total_media_size += sample_size;
                     ++ in_track->current_sample_number;
                     num_consecutive_sample_skip = 0;
-                    /* Print, per 4 megabytes, total size of imported media. */
-                    if( (total_media_size >> 22) > progress_pos )
+                    /* Check time per 1 megabytes */
+                    if( (total_media_size >> 20) > progress_pos )
                     {
-                        progress_pos = total_media_size >> 22;
-                        eprintf( "Importing: %"PRIu64" bytes\r", total_media_size );
+                        /* Print, per 1sec */
+                        struct timespec time_curr;
+                        timespec_get(&time_curr, TIME_UTC);
+                        if ((time_curr.tv_sec * 1000 + time_curr.tv_nsec / 1000000)
+                            - (time_update.tv_sec * 1000 + time_update.tv_nsec / 1000000) > 500)
+                        {
+                            double total_media_size_double = (double)total_media_size;
+                            int si_prefix = 0;
+                            const char *SI_PREFIX_STR[] = { "bytes", "KiB", "MiB", "GiB" };
+                            while (total_media_size_double > 1024)
+                            {
+                                si_prefix++;
+                                total_media_size_double *= (1.0 / 1024.0);
+                                if (si_prefix >= sizeof(SI_PREFIX_STR) / sizeof(SI_PREFIX_STR[0]) - 1)
+                                    break;
+                            }
+                            REFRESH_CONSOLE;
+                            eprintf("Importing: %.3lf %s\r", total_media_size_double, SI_PREFIX_STR[si_prefix]);
+                            fflush(stderr);
+                            time_update = time_curr;
+                        }
                     }
                 }
             }
@@ -1246,5 +1282,6 @@ int main( int argc, char *argv[] )
     cleanup_root( io.output );
     cleanup_timecode( io.timecode );
     eprintf( "Timeline editing completed!                                                    \n" );
+    fflush(stderr);
     return 0;
 }

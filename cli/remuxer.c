@@ -27,6 +27,7 @@
 #include <string.h>
 #include <inttypes.h>
 #include <stdarg.h>
+#include <time.h>
 
 typedef struct
 {
@@ -373,7 +374,7 @@ static int get_itunes_metadata( lsmash_root_t *root, uint32_t metadata_number, l
     lsmash_itunes_metadata_t shadow = *metadata;
     metadata->meaning = NULL;
     metadata->name    = NULL;
-    memset( &metadata->value, 0, sizeof(lsmash_itunes_metadata_value_t) );        
+    memset( &metadata->value, 0, sizeof(lsmash_itunes_metadata_value_t) );
     if( shadow.meaning )
     {
         metadata->meaning = duplicate_string( shadow.meaning );
@@ -1345,12 +1346,21 @@ static int flush_movie_fragment( remuxer_t *remuxer )
 static int moov_to_front_callback( void *param, uint64_t written_movie_size, uint64_t total_movie_size )
 {
     static uint32_t progress_pos = 0;
-    if ( (written_movie_size >> 24) <= progress_pos )
+    static struct timespec time_update = { 0, 0 };
+    if( (written_movie_size >> 22) <= progress_pos )
+        return 0;
+
+    /* Print, per 1sec */
+    struct timespec time_curr;
+    timespec_get(&time_curr, TIME_UTC);
+    if( (time_curr.tv_sec * 1000 + time_curr.tv_nsec / 1000000)
+        - (time_update.tv_sec * 1000 + time_update.tv_nsec / 1000000) <= 500 )
         return 0;
     REFRESH_CONSOLE;
     eprintf( "Finalizing: [%5.2lf%%]\r", ((double)written_movie_size / total_movie_size) * 100.0 );
-    /* Print, per 16 megabytes */
-    progress_pos = written_movie_size >> 24;
+    fflush(stderr);
+    progress_pos = written_movie_size >> 22;
+    time_update = time_curr;
     return 0;
 }
 
@@ -1505,6 +1515,8 @@ static int do_remux( remuxer_t *remuxer )
     uint64_t total_media_size            = 0;
     uint32_t progress_pos                = 0;
     uint8_t  pending_flush_fragments     = (remuxer->frag_base_track != 0); /* For non-fragmented movie, always set to 0. */
+    struct timespec time_update;
+    timespec_get(&time_update, TIME_UTC);
     while( 1 )
     {
         input_t       *in       = &inputs[input_movie_number - 1];
@@ -1646,11 +1658,30 @@ static int do_remux( remuxer_t *remuxer )
                         out_track->last_sample_dts        = last_sample_dts;
                         num_consecutive_sample_skip       = 0;
                         total_media_size                 += sample_size;
-                        /* Print, per 4 megabytes, total size of imported media. */
-                        if( (total_media_size >> 22) > progress_pos )
+                        /* Check time per 1 megabytes */
+                        if( (total_media_size >> 20) > progress_pos )
                         {
-                            progress_pos = total_media_size >> 22;
-                            eprintf( "Importing: %"PRIu64" bytes\r", total_media_size );
+                            /* Print, per 1sec */
+                            struct timespec time_curr;
+                            timespec_get(&time_curr, TIME_UTC);
+                            if ((time_curr.tv_sec * 1000 + time_curr.tv_nsec / 1000000)
+                                - (time_update.tv_sec * 1000 + time_update.tv_nsec / 1000000) > 500)
+                            {
+                                double total_media_size_double = (double)total_media_size;
+                                int si_prefix = 0;
+                                const char *SI_PREFIX_STR[] = { "bytes", "KiB", "MiB", "GiB" };
+                                while (total_media_size_double > 1024)
+                                {
+                                    si_prefix++;
+                                    total_media_size_double *= (1.0 / 1024.0);
+                                    if (si_prefix >= sizeof(SI_PREFIX_STR) / sizeof(SI_PREFIX_STR[0]) - 1)
+                                        break;
+                                }
+                                REFRESH_CONSOLE;
+                                eprintf("Importing: %.3lf %s\r", total_media_size_double, SI_PREFIX_STR[si_prefix]);
+                                fflush(stderr);
+                                time_update = time_curr;
+                            }
                         }
                     }
                     else
@@ -1821,6 +1852,7 @@ int main( int argc, char *argv[] )
         return REMUXER_ERR( "failed to finish output movie.\n" );
     REFRESH_CONSOLE;
     eprintf( "%s completed!\n", !remuxer.dash || remuxer.subseg_per_seg == 0 ? "Remuxing" : "Segmentation" );
+    fflush(stderr);
     cleanup_remuxer( &remuxer );
     return 0;
 }
